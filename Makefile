@@ -28,7 +28,7 @@ plugin-dev: generate
 	mv $(GOPATH)/bin/$(PLUGIN) $(GOPATH)/bin/terraform-$(PLUGIN)
 
 release: updatedeps
-	gox -build-toolchain
+	gox -build-toolchain || true
 	@$(MAKE) bin
 
 # test runs the unit tests and vets the code
