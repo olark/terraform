@@ -34,7 +34,9 @@ func Provider() terraform.ResourceProvider {
 		},
 
 		ResourcesMap: map[string]*schema.Resource{
-			"rackspace_compute_instance": resourceComputeInstance(),
+			"rackspace_compute_instance":   resourceComputeInstance(),
+			"rackspace_networking_network": resourceNetworkingNetwork(),
+			"rackspace_networking_subnet":  resourceNetworkingSubnet(),
 		},
 
 		ConfigureFunc: configureProvider,
