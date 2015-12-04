@@ -193,9 +193,13 @@ func resourceComputeInstanceCreate(d *schema.ResourceData, meta interface{}) err
 		return fmt.Errorf("Error creating Rackspace compute client: %s", err)
 	}
 
-	imageID, err := getImageID(computeClient, d)
-	if err != nil {
-		return err
+	blockDevices := resourceInstanceBlockDevice(d)
+	if len(blockDevices) == 0 {
+		imageID, err := getImageID(computeClient, d)
+		if err != nil {
+			fmt.Println(imageID)
+			//			return err
+		}
 	}
 
 	flavorID, err := getFlavorID(computeClient, d)
@@ -204,8 +208,8 @@ func resourceComputeInstanceCreate(d *schema.ResourceData, meta interface{}) err
 	}
 
 	createOpts := &rsServers.CreateOpts{
-		Name:           d.Get("name").(string),
-		ImageRef:       imageID,
+		Name: d.Get("name").(string),
+		//	ImageRef:       imageID,
 		FlavorRef:      flavorID,
 		Networks:       resourceInstanceNetworks(d),
 		Metadata:       resourceInstanceMetadata(d),
@@ -217,7 +221,7 @@ func resourceComputeInstanceCreate(d *schema.ResourceData, meta interface{}) err
 	}
 
 	log.Printf("[INFO] Requesting instance creation")
-	server, err := rsServers.Create(computeClient, createOpts).Extract()
+	server, err := osBootfromvolume.Create(computeClient, createOpts).Extract()
 	if err != nil {
 		return fmt.Errorf("Error creating Rackspace server: %s", err)
 	}
@@ -372,16 +376,15 @@ func resourceComputeInstanceRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("flavor_name", flavor.Name)
 
 	imageID, ok := server.Image["id"].(string)
-	if !ok {
-		return fmt.Errorf("Error setting OpenStack server's image: %v", server.Image)
-	}
-	d.Set("image_id", imageID)
+	if ok {
+		d.Set("image_id", imageID)
 
-	image, err := rsImages.Get(computeClient, imageID).Extract()
-	if err != nil {
-		return err
+		image, err := rsImages.Get(computeClient, imageID).Extract()
+		if err != nil {
+			return err
+		}
+		d.Set("image_name", image.Name)
 	}
-	d.Set("image_name", image.Name)
 
 	// volume attachments
 	vas, err := getVolumeAttachments(computeClient, d.Id())
