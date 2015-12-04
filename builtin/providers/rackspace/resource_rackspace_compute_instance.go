@@ -626,19 +626,21 @@ func resourceInstanceMetadata(d *schema.ResourceData) map[string]string {
 }
 
 func resourceInstanceBlockDevice(d *schema.ResourceData) []osBootfromvolume.BlockDevice {
-	bd := d.Get("block_device").(map[string]interface{})
-	sourceType := osBootfromvolume.SourceType(bd["source_type"].(string))
-	bfvOpts := []osBootfromvolume.BlockDevice{
-		osBootfromvolume.BlockDevice{
-			UUID:            bd["uuid"].(string),
-			SourceType:      sourceType,
-			VolumeSize:      bd["volume_size"].(int),
-			DestinationType: bd["destination_type"].(string),
-			BootIndex:       bd["boot_index"].(int),
-		},
-	}
 
-	return bfvOpts
+	rawBlockDevices := d.Get("block_device").([]interface{})
+	devices := make([]osBootfromvolume.BlockDevice, len(rawBlockDevices))
+	for i, raw := range rawBlockDevices {
+		rawMap := raw.(map[string]interface{})
+		sourceType := osBootfromvolume.SourceType(rawMap["source_type"].(string))
+		devices[i] = osBootfromvolume.BlockDevice{
+			UUID:            rawMap["uuid"].(string),
+			SourceType:      sourceType,
+			VolumeSize:      rawMap["volume_size"].(int),
+			DestinationType: rawMap["destination_type"].(string),
+			BootIndex:       rawMap["boot_index"].(int),
+		}
+	}
+	return devices
 }
 
 func getFirstNetworkID(networkingClient *gophercloud.ServiceClient, instanceID string) (string, error) {
